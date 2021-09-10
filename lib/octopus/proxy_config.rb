@@ -217,19 +217,24 @@ module Octopus
     private
 
     def connection_pool_for(config, adapter)
-      if Octopus.rails4?
-        spec = ActiveRecord::ConnectionAdapters::ConnectionSpecification.new(config.dup, adapter )
-      else
-        name = adapter["octopus_shard"]
-        spec = ActiveRecord::ConnectionAdapters::ConnectionSpecification.new(name, config.dup, adapter)
-      end
+      spec = if Octopus.rails61?
+               ActiveRecord::ConnectionAdapters::Role.new(adapter["octopus_shard"], config.dup)
+             elsif Octopus.rails4?
+               ActiveRecord::ConnectionAdapters::ConnectionSpecification.new(config.dup, adapter)
+             else
+               ActiveRecord::ConnectionAdapters::ConnectionSpecification.new(adapter["octopus_shard"], config.dup, adapter)
+             end
 
       ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
     end
 
     def resolve_string_connection(spec)
-      resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new({})
-      HashWithIndifferentAccess.new(resolver.spec(spec).config)
+      config = if Octopus.rails61?
+                 ActiveRecord::ConnectionAdapters::Resolver.new({}).resolve_role(spec).db_config
+               else
+                 ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new({}).spec(spec).config
+               end
+      HashWithIndifferentAccess.new(config)
     end
 
     def structurally_slave?(config)

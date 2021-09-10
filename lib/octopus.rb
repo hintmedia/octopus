@@ -90,6 +90,10 @@ module Octopus
     robust_environments.include? rails_env
   end
 
+  def self.rails61?
+    ActiveRecord::VERSION::MAJOR == 6 && ActiveRecord::VERSION::MINOR == 1
+  end
+
   def self.rails4?
     ActiveRecord::VERSION::MAJOR == 4
   end
