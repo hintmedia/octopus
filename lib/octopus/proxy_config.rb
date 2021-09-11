@@ -218,7 +218,7 @@ module Octopus
 
     def connection_pool_for(config, adapter)
       spec = if Octopus.rails61?
-               ActiveRecord::ConnectionAdapters::Role.new(adapter["octopus_shard"], config.dup)
+               ActiveRecord::ConnectionAdapters::PoolConfig.new(adapter["octopus_shard"], config.dup)
              elsif Octopus.rails4?
                ActiveRecord::ConnectionAdapters::ConnectionSpecification.new(config.dup, adapter)
              else
